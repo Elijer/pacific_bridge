@@ -13,7 +13,7 @@ RUN npm cache clean --force
 RUN rm -rf node_modules package-lock.json
 
 # Install dependencies
-RUN npm install
+RUN cd server && npm install
 
 # Build the client
 RUN cd client && npm i && npm run build
