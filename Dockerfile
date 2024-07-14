@@ -19,4 +19,4 @@ RUN npm install
 RUN cd client && npm i && npm run build
 
 # Start the server
-CMD ["node", "server/index.js"]
+CMD ["node", "server/server.js"]
