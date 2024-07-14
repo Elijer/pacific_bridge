@@ -16,7 +16,7 @@ RUN rm -rf node_modules package-lock.json
 RUN cd server && npm i
 
 # Build the client
-RUN cd server && npm install && cd.. && cd client && npm i && npm run build
+RUN cd server && npm install && cd .. && cd client && npm i && npm run build
 
 # Start the server
 CMD ["node", "server/server.js"]
