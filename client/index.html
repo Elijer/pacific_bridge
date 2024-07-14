@@ -1,16 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app">
-      <input type="file" id="fileInput" accept=".gltf,.glb">
-      <button id="uploadButton">Upload GLTF</button>
-    </div>
-    <script type="module" src="/client.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css"> <!-- Correctly link the CSS file -->
+  <title>3D Model Viewer</title>
+</head>
+<body>
+  <input type="file" id="fileInput">
+  <button id="uploadButton">Upload</button>
+  <script type="module" src="/client.js"></script>
+</body>
 </html>
