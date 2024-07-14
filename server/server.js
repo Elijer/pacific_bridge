@@ -1,13 +1,16 @@
 import express from 'express';
-import http from 'http';
+import { createServer } from 'http';
 import { Server } from 'socket.io';
 import multer from 'multer';
 import path from 'path';
 import cors from 'cors';
-import { __dirname } from './utils.js'; // Import the helper function
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const server = http.createServer(app);
+const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: '*', // Allow all origins for simplicity, adjust as needed
@@ -15,12 +18,15 @@ const io = new Server(server, {
   }
 });
 
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
 let currentFile = null
 
 let clients = {}
 
 app.use(cors());
-app.use('/uploads', express.static(path.join(__dirname(import.meta.url), 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

@@ -64,8 +64,7 @@ function renderGLB(fileUrl) {
     const mouse = new THREE.Vector2();
 
     let lastEmitTime = 0;
-    let messageRate = 30
-    const emitInterval = 1000 / messageRate; // 40 times per second
+    const emitInterval = 10
 
     function onMouseMove(event) {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;

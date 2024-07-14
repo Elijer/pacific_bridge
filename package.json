@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "disco": "disco projects:remove pacificbridge; disco projects:add --github elijer/pacific_bridge --name pacificbridge --domain pacificbridge.rcdis.co"
   },
   "keywords": [],
   "author": "",
