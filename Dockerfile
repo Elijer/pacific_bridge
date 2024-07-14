@@ -12,11 +12,9 @@ RUN npm cache clean --force
 # Remove any existing node_modules and package-lock.json
 RUN rm -rf node_modules package-lock.json
 
-# Install dependencies
-RUN cd server && npm install
 
-# Build the client
-RUN cd client && npm i && npm run build
+# Install deps and Build the client
+RUN cd server && npm install && cd.. && cd client && npm i && npm run build
 
 # Start the server
 CMD ["node", "server/server.js"]
