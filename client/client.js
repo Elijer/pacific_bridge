@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { v4 as uuidv4 } from 'uuid';
+import setupScene from './lib/setupScene.js';
 
 const socket = io('http://localhost:3000');
 
@@ -27,25 +27,8 @@ socket.on('modelUploaded', (data) => {
 
 function renderGLB(fileUrl) {
   console.log('Rendering GLB file from URL:', fileUrl); // Debugging line
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0xffffe0, 1); // Set background color to white
-  document.body.appendChild(renderer.domElement);
 
-  // Add lights
-  const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
-  scene.add(ambientLight);
-
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(5, 5, 5).normalize();
-  scene.add(directionalLight);
-
-  // Add OrbitControls
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 0, 0);
-  controls.update();
+  let {scene, camera, renderer, controls} = setupScene();
 
   const loader = new GLTFLoader();
   loader.load(fileUrl, (gltf) => {
