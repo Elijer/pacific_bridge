@@ -4,11 +4,25 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { v4 as uuidv4 } from 'uuid';
 import setupScene from './lib/setupScene.js';
 
+let cursors = {}
+let {scene, camera, renderer, controls} = setupScene();
+
 const savedFileURL = localStorage.getItem('modelFileURL');
 if (savedFileURL) {
   console.log("Found a previously uploaded file, gonna try to render it")
   console.log('Found saved model:', savedFileURL);
   renderGLB(savedFileURL);
+}
+
+let createCursor = (scene, cursor) => {
+  console.log(cursor)
+  const geo = new THREE.SphereGeometry(0.02, 8, 8);
+  const mat = new THREE.MeshBasicMaterial({ color: parseInt(cursor.color, 16) });
+  mat.transparent = true
+  mat.opacity = .3
+  const cursorMesh = new THREE.Mesh(geo, mat);
+  scene.add(cursorMesh);
+  return cursorMesh
 }
 
 const playerId = localStorage.getItem('playerId') || uuidv4();
@@ -17,6 +31,17 @@ localStorage.setItem('playerId', playerId);
 const socket = io('http://localhost:3000', {
   auth: { playerId }
 });
+
+socket.on('cursors', (data) => {
+  console.log("Hmm")
+  for (let cursor in data) {
+    if (cursors[cursor]) {
+      cursors[cursor].position.set(data[cursor].x, data[cursor].y, data[cursor].z)
+    } else {
+      cursors[cursor] = createCursor(scene, data[cursor])
+    }
+  }
+})
 
 socket.on('modelUploaded', (data) => {
   console.log(data)
@@ -28,8 +53,6 @@ socket.on('modelUploaded', (data) => {
 function renderGLB(fileUrl) {
   console.log('Rendering GLB file from URL:', fileUrl); // Debugging line
 
-  let {scene, camera, renderer, controls} = setupScene();
-
   const loader = new GLTFLoader();
   loader.load(fileUrl, (gltf) => {
     scene.add(gltf.scene);
@@ -40,32 +63,31 @@ function renderGLB(fileUrl) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // TODO: So this is going to get loaded according to the initial cursors passed on connections
-      // Add a sphere to represent the cursor position
-      // const cursorGeometry = new THREE.SphereGeometry(0.02, 8, 8);
-      // const cursorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-      // cursorMaterial.transparent = true;
-      // cursorMaterial.opacity = 0.3;
-      // const cursorMesh = new THREE.Mesh(cursorGeometry, cursorMaterial);
-      // scene.add(cursorMesh);
+    let lastEmitTime = 0;
+    let messageRate = 30
+    const emitInterval = 1000 / messageRate; // 40 times per second
 
     function onMouseMove(event) {
-
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-      // Update the raycaster with the camera and mouse position
       raycaster.setFromCamera(mouse, camera);
 
-      // Calculate objects intersecting the raycaster
       const intersects = raycaster.intersectObject(gltf.scene, true);
 
       if (intersects.length > 0) {
-        // Get cursor position and send to server
         const intersect = intersects[0];
-        // console.log(intersect)
-        // cursorMesh.position.copy(intersect.point); // this updates the cursor position
-        socket.emit('cursorPosition', { playerId: playerId, x: intersect.point.x, y: intersect.point.y, z: intersect.point.z });
+        const currentTime = Date.now();
+
+        if (currentTime - lastEmitTime >= emitInterval) {
+          socket.emit('cursorPosition', { 
+            playerId: playerId, 
+            x: intersect.point.x, 
+            y: intersect.point.y, 
+            z: intersect.point.z 
+          });
+          lastEmitTime = currentTime;
+        }
       }
     }
 

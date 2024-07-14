@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
       x: 0,
       y: 0,
       z: 0,
-      color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+      color: '0x' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')
     };
   }
 
@@ -74,13 +74,13 @@ io.on('connection', (socket) => {
     socket.emit('modelUploaded', { fileUrl: currentFile });
   }
 
-  // Handle cursor position events
-  // socket.on('cursorPosition', (data) => {
+  socket.emit('cursors', clients)
 
-  //   // so this is where I get cursor position - unlike before, i have to update the player map before sending the entire playermap back
-  //   console.log(data)
-  //   // socket.broadcast.emit('cursorPosition', data);
-  // });
+  // Handle cursor position events
+  socket.on('cursorPosition', (data) => {
+    clients[data.playerId] = {...clients[data.playerId], ...data}
+    socket.emit('cursors', clients)
+  });
 
   socket.on('disconnect', () => {
     console.log('user disconnected');
