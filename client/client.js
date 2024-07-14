@@ -2,60 +2,27 @@ import { io } from 'socket.io-client';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const socket = io('http://localhost:3000');
 
-// Check for existing fileURL in localStorage
 const savedFileURL = localStorage.getItem('modelFileURL');
 if (savedFileURL) {
   console.log("Found a previously uploaded file, gonna try to render it")
   console.log('Found saved model:', savedFileURL);
-  // alert('A previously uploaded file has been found and will be used by default.');
   renderGLB(savedFileURL);
 }
 
-socket.on('connect', () => {
-  console.log('Connected to server');
-});
-
-socket.on('Hey', (message) => {
-  console.log('Hey message received:', message);
-});
+const playerId = localStorage.getItem('playerId');
+if (!playerId) {
+  playerId = uuidv4();
+  localStorage.setItem('playerId', playerId);
+}
 
 socket.on('modelUploaded', (data) => {
-  console.log("yo")
   console.log("Websocket: model was uploaded by a client somewhere to here:", data.fileUrl)
-  console.log('Model uploaded:', data);
   localStorage.setItem('modelFileURL', data.fileUrl); // Save URL to localStorage
   renderGLB(data.fileUrl);
-});
-
-document.getElementById('uploadButton').addEventListener('click', async () => {
-  const fileInput = document.getElementById('fileInput');
-  const file = fileInput.files[0];
-  
-  if (file && (file.name.toLowerCase().endsWith('.gltf') || file.name.toLowerCase().endsWith('.glb'))) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('http://localhost:3000/upload-3d-model', {
-        method: 'POST',
-        body: formData
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok ' + response.statusText);
-      }
-      const result = await response.json();
-      console.log('3D model file uploaded successfully:', result);
-      localStorage.setItem('modelFileURL', result.fileUrl); // Save URL to localStorage
-      renderGLB(result.fileUrl);
-    } catch (error) {
-      console.error('Error uploading 3D model file:', error);
-    }
-  } else {
-    console.log('No GLTF or GLB file selected');
-  }
 });
 
 function renderGLB(fileUrl) {
@@ -137,3 +104,31 @@ function renderGLB(fileUrl) {
     console.error('An error happened while loading the GLB file:', error);
   });
 }
+
+document.getElementById('uploadButton').addEventListener('click', async () => {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  
+  if (file && (file.name.toLowerCase().endsWith('.gltf') || file.name.toLowerCase().endsWith('.glb'))) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:3000/upload-3d-model', {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+      }
+      const result = await response.json();
+      console.log('3D model file uploaded successfully:', result);
+      localStorage.setItem('modelFileURL', result.fileUrl); // Save URL to localStorage
+      renderGLB(result.fileUrl);
+    } catch (error) {
+      console.error('Error uploading 3D model file:', error);
+    }
+  } else {
+    console.log('No GLTF or GLB file selected');
+  }
+});
