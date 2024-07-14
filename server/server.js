@@ -17,6 +17,8 @@ const io = new Server(server, {
 
 let currentFile = null
 
+let clients = {}
+
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname(import.meta.url), 'uploads')));
 
@@ -53,15 +55,32 @@ app.post('/upload-3d-model', upload.single('file'), (req, res) => {
 });
 
 io.on('connection', (socket) => {
+  console.log(currentFile)
+
+  const playerId = socket.handshake.auth.playerId;
+  console.log(`New connection from player: ${playerId.substring(0, 5) + '...'}`);
+
+  if (!clients[playerId]){
+    clients[playerId] = {
+      socket: socket.id,
+      x: 0,
+      y: 0,
+      z: 0,
+      color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+    };
+  }
+
   if (currentFile) {
     socket.emit('modelUploaded', { fileUrl: currentFile });
   }
-  console.log('a user connected');
 
   // Handle cursor position events
-  socket.on('cursorPosition', (data) => {
-    socket.broadcast.emit('cursorPosition', data);
-  });
+  // socket.on('cursorPosition', (data) => {
+
+  //   // so this is where I get cursor position - unlike before, i have to update the player map before sending the entire playermap back
+  //   console.log(data)
+  //   // socket.broadcast.emit('cursorPosition', data);
+  // });
 
   socket.on('disconnect', () => {
     console.log('user disconnected');

@@ -4,8 +4,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { v4 as uuidv4 } from 'uuid';
 import setupScene from './lib/setupScene.js';
 
-const socket = io('http://localhost:3000');
-
 const savedFileURL = localStorage.getItem('modelFileURL');
 if (savedFileURL) {
   console.log("Found a previously uploaded file, gonna try to render it")
@@ -13,13 +11,15 @@ if (savedFileURL) {
   renderGLB(savedFileURL);
 }
 
-const playerId = localStorage.getItem('playerId');
-if (!playerId) {
-  playerId = uuidv4();
-  localStorage.setItem('playerId', playerId);
-}
+const playerId = localStorage.getItem('playerId') || uuidv4();
+localStorage.setItem('playerId', playerId);
+
+const socket = io('http://localhost:3000', {
+  auth: { playerId }
+});
 
 socket.on('modelUploaded', (data) => {
+  console.log(data)
   console.log("Websocket: model was uploaded by a client somewhere to here:", data.fileUrl)
   localStorage.setItem('modelFileURL', data.fileUrl); // Save URL to localStorage
   renderGLB(data.fileUrl);
@@ -32,7 +32,6 @@ function renderGLB(fileUrl) {
 
   const loader = new GLTFLoader();
   loader.load(fileUrl, (gltf) => {
-    console.log('GLB file loaded successfully'); // Debugging line
     scene.add(gltf.scene);
 
     camera.position.set(0.08, 1.2, .7); // Start camera position
@@ -41,17 +40,17 @@ function renderGLB(fileUrl) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    // Add a sphere to represent the cursor position
-    const cursorGeometry = new THREE.SphereGeometry(0.02, 8, 8);
-    const cursorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    cursorMaterial.transparent = true;
-    cursorMaterial.opacity = 0.3;
-    const cursorMesh = new THREE.Mesh(cursorGeometry, cursorMaterial);
-    scene.add(cursorMesh);
+    // TODO: So this is going to get loaded according to the initial cursors passed on connections
+      // Add a sphere to represent the cursor position
+      // const cursorGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+      // const cursorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      // cursorMaterial.transparent = true;
+      // cursorMaterial.opacity = 0.3;
+      // const cursorMesh = new THREE.Mesh(cursorGeometry, cursorMaterial);
+      // scene.add(cursorMesh);
 
-    // Update cursor position on mouse move
     function onMouseMove(event) {
-      // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
+
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -62,20 +61,23 @@ function renderGLB(fileUrl) {
       const intersects = raycaster.intersectObject(gltf.scene, true);
 
       if (intersects.length > 0) {
+        // Get cursor position and send to server
         const intersect = intersects[0];
-        cursorMesh.position.copy(intersect.point);
-
-        // Send cursor position to the server
-        socket.emit('cursorPosition', { x: intersect.point.x, y: intersect.point.y, z: intersect.point.z });
+        // console.log(intersect)
+        // cursorMesh.position.copy(intersect.point); // this updates the cursor position
+        socket.emit('cursorPosition', { playerId: playerId, x: intersect.point.x, y: intersect.point.y, z: intersect.point.z });
       }
     }
 
     window.addEventListener('mousemove', onMouseMove, false);
 
     // Listen for cursor positions from other clients
-    socket.on('cursorPosition', (data) => {
-      cursorMesh.position.set(data.x, data.y, data.z);
-    });
+    // socket.on('cursorPosition', (data) => {
+    //   cursorMesh.position.set(data.x, data.y, data.z);
+    // });
+    // TODO:
+    // So this is where I need to receive an array of cursor positions and update each cursor position, maybe creating
+    // New mesh as needed
 
     const animate = function () {
       requestAnimationFrame(animate);
