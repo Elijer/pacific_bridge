@@ -33,7 +33,6 @@ const socket = io('http://localhost:3000', {
 });
 
 socket.on('cursors', (data) => {
-  console.log("Hmm")
   for (let cursor in data) {
     if (cursors[cursor]) {
       cursors[cursor].position.set(data[cursor].x, data[cursor].y, data[cursor].z)
