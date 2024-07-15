@@ -4,26 +4,28 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { v4 as uuidv4 } from 'uuid';
 import setupScene from './lib/setupScene.js';
 
-let cursors = {}
-let {scene, camera, renderer, controls} = setupScene();
+console.log("Initializing 3D Model Viewer");
+
+let cursors = {};
+let { scene, camera, renderer, controls } = setupScene();
 
 const savedFileURL = localStorage.getItem('modelFileURL');
 if (savedFileURL) {
-  console.log("Found a previously uploaded file, gonna try to render it")
+  console.log("Found a previously uploaded file, gonna try to render it");
   console.log('Found saved model:', savedFileURL);
   renderGLB(savedFileURL);
 }
 
 let createCursor = (scene, cursor) => {
-  console.log(cursor)
+  console.log(cursor);
   const geo = new THREE.SphereGeometry(0.02, 8, 8);
   const mat = new THREE.MeshBasicMaterial({ color: parseInt(cursor.color, 16) });
-  mat.transparent = true
-  mat.opacity = .3
+  mat.transparent = true;
+  mat.opacity = 0.3;
   const cursorMesh = new THREE.Mesh(geo, mat);
   scene.add(cursorMesh);
-  return cursorMesh
-}
+  return cursorMesh;
+};
 
 const playerId = localStorage.getItem('playerId') || uuidv4();
 localStorage.setItem('playerId', playerId);
@@ -33,17 +35,18 @@ const socket = io('http://localhost:3000', {
 });
 
 socket.on('cursors', (data) => {
+  console.log("Received cursors data");
   for (let cursor in data) {
     if (cursors[cursor]) {
-      cursors[cursor].position.set(data[cursor].x, data[cursor].y, data[cursor].z)
+      cursors[cursor].position.set(data[cursor].x, data[cursor].y, data[cursor].z);
     } else {
-      cursors[cursor] = createCursor(scene, data[cursor])
+      cursors[cursor] = createCursor(scene, data[cursor]);
     }
   }
-})
+});
 
 socket.on('modelUploaded', (data) => {
-  console.log("Websocket: model was uploaded by a client somewhere to here:", data.fileUrl)
+  console.log("Websocket: model was uploaded by a client somewhere to here:", data.fileUrl);
   localStorage.setItem('modelFileURL', data.fileUrl); // Save URL to localStorage
   renderGLB(data.fileUrl);
 });
