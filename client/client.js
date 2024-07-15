@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { v4 as uuidv4 } from 'uuid';
 import setupScene from './lib/setupScene.js';
 
+//
 console.log("Initializing 3D Model Viewer");
 
 let cursors = {};
