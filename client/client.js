@@ -43,13 +43,12 @@ socket.on('cursors', (data) => {
 })
 
 socket.on('modelUploaded', (data) => {
-  console.log(data)
   console.log("Websocket: model was uploaded by a client somewhere to here:", data.fileUrl)
   localStorage.setItem('modelFileURL', data.fileUrl); // Save URL to localStorage
   renderGLB(data.fileUrl);
 });
 
-function renderGLB(fileUrl) {
+async function renderGLB(fileUrl) {
   console.log('Rendering GLB file from URL:', fileUrl); // Debugging line
 
   const loader = new GLTFLoader();
@@ -129,7 +128,7 @@ document.getElementById('uploadButton').addEventListener('click', async () => {
       const result = await response.json();
       console.log('3D model file uploaded successfully:', result);
       localStorage.setItem('modelFileURL', result.fileUrl); // Save URL to localStorage
-      renderGLB(result.fileUrl);
+      await renderGLB(result.fileUrl);
     } catch (error) {
       console.error('Error uploading 3D model file:', error);
     }

@@ -61,8 +61,6 @@ app.post('/upload-3d-model', upload.single('file'), (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  console.log(currentFile)
-
   const playerId = socket.handshake.auth.playerId;
   console.log(`New connection from player: ${playerId.substring(0, 5) + '...'}`);
 
@@ -82,6 +80,10 @@ io.on('connection', (socket) => {
 
   socket.emit('cursors', clients)
 
+  socket.on('setCurrentFile', (data) => {
+    currentFile = data
+  })
+
   // Handle cursor position events
   socket.on('cursorPosition', (data) => {
     clients[data.playerId] = {...clients[data.playerId], ...data}
@@ -91,6 +93,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });
+
 });
 
 server.listen(3000, () => {
