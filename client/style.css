@@ -4,6 +4,7 @@ body, html {
   padding: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 input, button {
@@ -13,6 +14,15 @@ input, button {
   display: block;
 }
 
-canvas {
+/* canvas { */
   /* cursor: none; */
+/* } */
+
+.comment {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  position: absolute;
+  transform: translate(-50%, -50%);
 }
