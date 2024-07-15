@@ -5,6 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,8 @@ const io = new Server(server, {
     methods: ['GET', 'POST']
   }
 });
+
+
 
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
@@ -38,6 +41,28 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+// Function to get the most recent file in the uploads folder
+function getMostRecentFile() {
+  const uploadsDir = path.join(__dirname, 'uploads');
+  const files = fs.readdirSync(uploadsDir);
+  
+  if (files.length === 0) return null;
+
+  const mostRecentFile = files.reduce((latest, file) => {
+    const filePath = path.join(uploadsDir, file);
+    const stats = fs.statSync(filePath);
+    if (stats.mtime > latest.mtime) {
+      return { file, mtime: stats.mtime };
+    }
+    return latest;
+  }, { file: null, mtime: new Date(0) });
+
+  return mostRecentFile.file ? `http://localhost:3000/uploads/${mostRecentFile.file}` : null;
+}
+
+// Set currentFile to the most recent file on server start
+currentFile = getMostRecentFile();
 
 app.post('/upload-3d-model', upload.single('file'), (req, res) => {
   if (!req.file) {
@@ -61,6 +86,7 @@ app.post('/upload-3d-model', upload.single('file'), (req, res) => {
 });
 
 io.on('connection', (socket) => {
+  console.log("most recent file is", currentFile)
   const playerId = socket.handshake.auth.playerId;
   console.log(`New connection from player: ${playerId.substring(0, 5) + '...'}`);
 
